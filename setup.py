@@ -11,6 +11,12 @@ setup(
         "numpy>=1.21.0",
         "pandas>=1.3.1",
         "matplotlib>=3.4.2",
-        "six"  # Add six here
-    ]
+        ],
+    # Optional: include more metadata or configurations if needed
+    python_requires='>=3.6',  # Specify the minimum Python version required
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
 )
