@@ -5,6 +5,10 @@ from typing import IO, List, Tuple, Dict, Any
 import os
 import nltk
 import sys
+import string
+from collections import Counter
+import math
+import matplotlib.pyplot as plt
 
 # download nltk.punkt tokenizer model.
 nltk.download('all', quiet=True)
@@ -56,13 +60,11 @@ def _handle_contractions(tokens: List[str]) -> List[str]:
                 tokens.insert(idx+1,"not")
 
             # Handle - Positive contractions
-            general_positive_contractions = ["he", "she", "it", "that", "here" , "there", "what", "when", "where", "which", "who" , "how"]
-            
             if token == "'s":
-                if tokens[idx-1] in general_positive_contractions:
-                    tokens[idx] = "is"
-                elif tokens[idx-1] == "let":
+                if tokens[idx-1] == "let":
                     tokens[idx] = "us"
+                else:
+                    tokens[idx] = "is"
 
             elif token == "'m":
                 tokens[idx] = "am"
@@ -94,9 +96,38 @@ def _handle_punctuations(tokens: List[str]) -> List[str]:
     - **List[str]: A new list of tokens with leading and trailing punctuation
                    separated, but with internal punctuation preserved.
     """
-    
-    
-    return tokens
+    final_tokens = []
+
+    # Regular expressions to match leading and trailing punctuation
+    leading_punctuation = re.compile(r'^[^\w\s]+')
+    trailing_punctuation = re.compile(r'[^\w\s]+$')
+
+    for token in tokens:
+        # Check if token is purely punctuation
+        if re.fullmatch(r'[^\w\s]+', token):
+            final_tokens.append(token)
+            continue
+
+        
+        leading_punctuation_match = leading_punctuation.match(token)
+        trailing_punctuation_match = trailing_punctuation.search(token)
+
+        if leading_punctuation_match:            
+            final_tokens.extend(list(leading_punctuation_match.group()))
+        
+        # Extract core word without leading/trailing punctuation
+        word_start = len(leading_punctuation_match.group()) if leading_punctuation_match else 0
+        word_end = -len(trailing_punctuation_match.group()) if trailing_punctuation_match else len(token)
+        word = token[word_start:word_end]
+
+        if word:
+            final_tokens.append(word)
+        
+        if trailing_punctuation_match:
+            # Add trailing punctuation as separate tokens
+            final_tokens.extend(list(trailing_punctuation_match.group()))
+
+    return final_tokens
 
 
 def preprocess_text(textfilepath: str) -> Tuple[str, List[str], List[str]]:
@@ -160,6 +191,9 @@ def calculate_statistics(content: str, wordtokens: List[str], sentenceTokens: Li
     uniqueTokens = set(wordtokens)
     results['NumberOfUniqueTokens'] = len(uniqueTokens)
 
+    results['FrequenciesOfTokens'] = Counter(wordtokens)
+
+      
     return results
 
 def write_statistics_to_file(statistics: Dict[str, Any], outputfilepath: str) -> None:
@@ -176,6 +210,12 @@ def write_statistics_to_file(statistics: Dict[str, Any], outputfilepath: str) ->
         file.write(f"# of sentences = {statistics['NumberOfSentences']}\n")
         file.write(f"# of tokens = {statistics['NumberOfTokens']}\n")
         file.write(f"# of unique tokens = {statistics['NumberOfUniqueTokens']}\n")
+        file.write(f"====================================\n")
+        
+        ordered_tokens = sorted(statistics['FrequenciesOfTokens'].items(), key=lambda item:(-item[1], item[0]))
+        for idx, (token, count) in enumerate(ordered_tokens, start = 1):
+            file.write(f"{idx}: {token} {count}\n")
+
     except IOError as e:
         print(f"Unable to write to the file at path : {outputfilepath}")
 
@@ -185,18 +225,53 @@ def write_statistics_to_file(statistics: Dict[str, Any], outputfilepath: str) ->
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+def zipf_plot(statistics: Dict[str, Any]) -> None:
 
+    log_rank = []
+    log_frequency = []
+
+    ordered_tokens = sorted(statistics['FrequenciesOfTokens'].items(), key=lambda item:(-item[1], item[0]))
+    for idx, (token, count) in enumerate(ordered_tokens, start = 1):
+        if idx != 0:
+            log_rank.append(math.log(idx))
+        
+        if count != 0:
+            log_frequency.append(math.log(count))
+    
+    plt.plot(log_rank, log_frequency)
+
+    
 def main():
     directory_name = os.path.dirname(__file__)
+
+    print(f"--- Start : Task 1 ---")
     inputfilename = 'sample_2024.txt'
     outputfilename = 'output1.txt'
     
     content, wordtokens, sentenceTokens = preprocess_text(os.path.join(directory_name,inputfilename))
     results = calculate_statistics(content, wordtokens, sentenceTokens)
-    #print(wordtokens)
-    print(results)
+    # Write statistical results to file 
+    write_statistics_to_file(results,os.path.join(directory_name, outputfilename))
+
+    print(f"\t The result is written in the output1.txt file, which is at location : {os.path.join(directory_name, outputfilename)} ")
+    
+    zipf_plot(results)
+    
+    print(f"--- Task 1 completed ---")
+
+
+    # print(f"--- Start : Task 2 ---")
+
+    # inputfilename = 'war-and-peace.txt'
+    # outputfilename = 'output2.txt'
+    
+    # content, wordtokens, sentenceTokens = preprocess_text(os.path.join(directory_name,inputfilename))
+    # results = calculate_statistics(content, wordtokens, sentenceTokens)
     # # Write statistical results to file 
     # write_statistics_to_file(results,os.path.join(directory_name, outputfilename))
+    
+    # print(f"\t The result is written in the output1.txt file, which is at location : {os.path.join(directory_name, outputfilename)} ")
+    # print(f"--- Task 2 completed ---")
 
 if __name__ == "__main__":
     main()
