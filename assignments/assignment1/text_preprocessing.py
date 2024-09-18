@@ -38,9 +38,65 @@ def _handle_contractions(tokens: List[str]) -> List[str]:
     ### Returns:
     - **List[str]**: A new list of tokens where contractions are expanded based on the specified rules.
     """
-    updated_tokens = tokens
-    return updated_tokens
+    
+    if tokens:
+        for idx, token in enumerate(tokens):
+            
+            # Handle - Negative contractions
+            if token == "n't":
+                if tokens[idx-1] == "ca":
+                    tokens[idx-1] = "can"
+                elif tokens[idx-1] == "wo":
+                    tokens[idx-1] = "will"
+                elif tokens[idx-1] == "sha":
+                    tokens[idx-1] = "shall"                
+                tokens[idx] = "not"
+            elif token.endswith("n't"):
+                tokens[idx] = re.sub(r"n't$",'',token)
+                tokens.insert(idx+1,"not")
 
+            # Handle - Positive contractions
+            general_positive_contractions = ["he", "she", "it", "that", "here" , "there", "what", "when", "where", "which", "who" , "how"]
+            
+            if token == "'s":
+                if tokens[idx-1] in general_positive_contractions:
+                    tokens[idx] = "is"
+                elif tokens[idx-1] == "let":
+                    tokens[idx] = "us"
+
+            elif token == "'m":
+                tokens[idx] = "am"
+
+            elif token == "'re":
+                tokens[idx] = "are"
+            
+            elif token == "'d":
+                tokens[idx] = "would"
+
+            elif token == "'ve":
+                tokens[idx] = "have"
+            
+            elif token == "'ll":
+                tokens[idx] = "will"
+    return tokens
+
+def _handle_punctuations(tokens: List[str]) -> List[str]:
+    """
+    The function processes a list of tokens to handle punctuations as follows:
+
+    - Leading and trailing punctuation is separated into individual tokens.
+    - Internal punctuation within tokens is not altered.
+
+    ### Parameters:
+    - **tokens (List[str]): A list of tokenized strings, which may include
+                            punctuation.
+    ### Returns:
+    - **List[str]: A new list of tokens with leading and trailing punctuation
+                   separated, but with internal punctuation preserved.
+    """
+    
+    
+    return tokens
 
 
 def preprocess_text(textfilepath: str) -> Tuple[str, List[str], List[str]]:
@@ -59,15 +115,13 @@ def preprocess_text(textfilepath: str) -> Tuple[str, List[str], List[str]]:
     content = file.read()
     content = content.lower()
 
-    wordtokens = nltk.word_tokenize(content)
+    wordtokens = nltk.word_tokenize(content)    
     wordtokens = _handle_contractions(wordtokens)
+    wordtokens = _handle_punctuations(wordtokens)
     sentenceTokens = nltk.sent_tokenize(content)
     return content, wordtokens, sentenceTokens
 
-
-
-
-def calculate_statistics(contect: str, wordtokens: List[str], sentenceTokens: List[str] ) -> Dict[str, Any]:
+def calculate_statistics(content: str, wordtokens: List[str], sentenceTokens: List[str] ) -> Dict[str, Any]:
     """
     Calculates various text statistics based on the input text content and tokens.
 
@@ -94,7 +148,7 @@ def calculate_statistics(contect: str, wordtokens: List[str], sentenceTokens: Li
     results = {}
 
     # Calculate number of paragraphs
-    results['NumberOfParagraphs'] = _count_paragraphs(contect)
+    results['NumberOfParagraphs'] = _count_paragraphs(content)
 
     # calculate number of sentences
     results['NumberOfSentences'] = len(sentenceTokens)
@@ -139,8 +193,8 @@ def main():
     
     content, wordtokens, sentenceTokens = preprocess_text(os.path.join(directory_name,inputfilename))
     results = calculate_statistics(content, wordtokens, sentenceTokens)
-    # print(wordtokens)
-    
+    #print(wordtokens)
+    print(results)
     # # Write statistical results to file 
     # write_statistics_to_file(results,os.path.join(directory_name, outputfilename))
 
