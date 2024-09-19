@@ -11,7 +11,7 @@ import math
 import matplotlib.pyplot as plt
 
 # download nltk.punkt tokenizer model.
-nltk.download('all', quiet=True)
+nltk.download('punkt', quiet=True)
 
 def _count_paragraphs(text: str) -> int:
     """
@@ -240,7 +240,7 @@ def zipf_plot(statistics: Dict[str, Any]) -> None:
     
     plt.plot(log_rank, log_frequency)
 
-    
+
 def main():
     directory_name = os.path.dirname(__file__)
 
