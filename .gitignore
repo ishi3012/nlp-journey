@@ -35,4 +35,7 @@ htmlcov/
 # Jupyter Notebook
 .ipynb_checkpoints/
 
+# Input file content
+assignments/assignment3/InputFiles/
+
 
