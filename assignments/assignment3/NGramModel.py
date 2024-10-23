@@ -4,16 +4,17 @@ from enum import Enum
 from collections import defaultdict, Counter
 from typing import List, Tuple, Dict
 import time
+from nltk.probability import ConditionalFreqDist
 
 
 
 class NgramType(Enum):
-    UNIGRAM = 1
+    # UNIGRAM = 1
     BIGRAM = 2
     TRIGRAM = 3
-    QUADGRAM = 4
-    PENTAGRAM = 5
-    HEXAGRAM = 6
+    # QUADGRAM = 4
+    # PENTAGRAM = 5
+    # HEXAGRAM = 6
 
 class Strategy(Enum):
     GREEDY = "greedy"
@@ -35,7 +36,6 @@ class NgramModel:
         self.token_counts = Counter()
         self.start_token = "<START>"
         self.end_token = "<STOP>"
-
 
     def preprocess(self, sentence):
         """
@@ -106,10 +106,13 @@ class NgramModel:
 
         :param corpus: List of sentences (strings).
         """
+        tokens_list = []
+        
         for sentence in corpus:
             tokens = self.preprocess(sentence)
             tokens = self.replace_rare_tokens(tokens)  # Replace rare tokens with <unk>
             ngrams = self.get_ngrams(tokens)
+            tokens_list.append(tokens)
 
             # print(ngrams[:5])
 
@@ -118,7 +121,15 @@ class NgramModel:
                 self.ngram_counts[ngram] += 1
                 self.n_minus_1_gram_counts[ngram[:-1]] += 1
            
-            for ngram, count in self.ngram_counts.items():
+            # for ngram, count in self.ngram_counts.items():
+            #     context = ngram[:-1]
+            #     next_word = ngram[-1]
+            #     context_count = self.n_minus_1_gram_counts[context]
+
+            #     if context_count > 0:
+            #         self.cfd[context][next_word] = count / context_count
+    def compute_cfd(self):
+        for ngram, count in self.ngram_counts.items():
                 context = ngram[:-1]
                 next_word = ngram[-1]
                 context_count = self.n_minus_1_gram_counts[context]
@@ -214,6 +225,8 @@ class NgramModel:
         current_ngram = (self.start_token,) * (self.n - 1)
         sentence = list(current_ngram)
 
+        self.compute_cfd()
+
         for _ in range(max_length):
             next_word = self.choose_next_word(current_ngram, strategy, top_p)
             
@@ -289,7 +302,7 @@ class NgramModel:
             file.write(f"Generated Text:\n{generated_text}\n")
             file.write("\n----------------------\n\n")
 
-# Example Usage
+
 if __name__ == "__main__":
     # File paths for training and test data
     train_file = "assignments/assignment3/InputFiles/1b_benchmark.train.tokens.txt"  
@@ -298,7 +311,8 @@ if __name__ == "__main__":
 
     for ngramtype in NgramType:
 
-        print(f"\n ~~~~~~~~ EVALUATE {ngramtype.name} MODEL.~~~~~~~~ \n")
+        print(f"\n PART I: N-gram Modeling and Perplexity \n")
+        # print(f"\n ~~~~~~~~ EVALUATE {ngramtype.name} MODEL.~~~~~~~~ \n")
         n = ngramtype.value
         
         # Create a ngram model
@@ -325,19 +339,20 @@ if __name__ == "__main__":
         average_perplexity_withsmoothing = ngram_model.calculate_average_perplexity(test_corpus, smoothing = 1)
         print(f"    Average Perplexity: {average_perplexity_withsmoothing}")
 
-        print(f"\n ~~~~~~~~~~ GENERATING TEXT ~~~~~~~~~~~~~~~~~~~~~~~\n ")
+        print(f"\n PART II: Text generation from ngram language models \n")
+        # print(f"\n ~~~~~~~~~~ GENERATING TEXT ~~~~~~~~~~~~~~~~~~~~~~~\n ")
         
-        top_p_value = 0.9
-        for strategy in Strategy:
+        # top_p_value = 0.9
+        # for strategy in Strategy:
             
 
-            # Generate the text
-            generated_text = ngram_model.generate_text(max_length=100, strategy=strategy.value, top_p=top_p_value)
+        #     # Generate the text
+        #     generated_text = ngram_model.generate_text(max_length=100, strategy=strategy.value, top_p=top_p_value)
         
-            # Save the generated text to a file for later review
-            ngram_model.save_generated_text_to_file(generated_text, output_file_path, strategy, top_p_value, ngramtype.name)
+        #     # Save the generated text to a file for later review
+        #     ngram_model.save_generated_text_to_file(generated_text, output_file_path, strategy, top_p_value, ngramtype.name)
 
-        print(f"Generated text saved to {output_file_path}")
+        # print(f"Generated text saved to {output_file_path}")
 
     print("\n")
 
