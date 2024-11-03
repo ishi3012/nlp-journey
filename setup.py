@@ -11,6 +11,17 @@ setup(
         "numpy>=1.21.0",
         "pandas>=1.3.1",
         "matplotlib>=3.4.2",
+        "transformers",
+        "datasets", 
+        "torch",
+        "evaluate",
+        "rouge_score",
+        "absl-py",
+        "bert_score",
+        "kaggle",
+        # "transformers>=4.26.0",
+        "torch>=1.11.0",
+        "accelerate>=0.26.0", 
         ],
     # Optional: include more metadata or configurations if needed
     python_requires='>=3.6',  # Specify the minimum Python version required
