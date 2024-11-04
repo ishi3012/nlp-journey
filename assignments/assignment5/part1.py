@@ -99,7 +99,6 @@ def create_summarizer(model_type: str, dataset: Dataset) -> T5Summarizer:
 
     return T5Summarizer(dataset=dataset, model_name=model_name)
 
-
 def main():
     # Load dataset 
     dataset_name = "abisee/cnn_dailymail"
@@ -134,7 +133,6 @@ def main():
 
     for key, result in fine_tuned_results.items():
         print(f"{key}: {result}\n")
-
 
 if __name__ == "__main__":
     main()
